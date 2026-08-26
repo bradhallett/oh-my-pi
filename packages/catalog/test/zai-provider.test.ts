@@ -23,14 +23,17 @@ describe("Z.AI built-in provider", () => {
 		expect(descriptor?.dynamicModelsAuthoritative).toBe(true);
 		expect(DEFAULT_MODEL_PER_PROVIDER.zai).toBe("glm-5.3");
 
-		// The bundled seed is what discovery merges references from, so every
-		// row must be an anthropic-messages model on the proxy endpoint.
+		// The bundled seed is what discovery merges references from. Rows ride
+		// either Z.AI transport: glm-5.3 on the Anthropic-compatible proxy, the
+		// natively multimodal glm-5.3-flash on the native PAAS endpoint.
 		const bundled = getBundledModels("zai");
 		expect(bundled.map(model => model.id)).toContain("glm-5.3");
-		for (const model of bundled) {
-			expect(model.api).toBe("anthropic-messages");
-			expect(model.baseUrl).toBe(ZAI_ANTHROPIC_BASE_URL);
-		}
+		const bundledGlm53 = bundled.find(model => model.id === "glm-5.3");
+		expect(bundledGlm53?.api).toBe("anthropic-messages");
+		expect(bundledGlm53?.baseUrl).toBe(ZAI_ANTHROPIC_BASE_URL);
+		const bundledFlash = bundled.find(model => model.id === "glm-5.3-flash");
+		expect(bundledFlash?.api).toBe("openai-completions");
+		expect(bundledFlash?.baseUrl).toBe("https://api.z.ai/api/coding/paas/v4");
 	});
 
 	test("keeps the bundled catalog when no API key is configured", () => {
@@ -98,14 +101,44 @@ describe("Z.AI built-in provider", () => {
 		expect(glm?.contextWindow).toBe(1_000_000);
 		expect(glm?.maxTokens).toBe(131_072);
 
-		// Id the seed does not know: endpoint defaults, still routed through the
-		// proxy so host-keyed GLM compat keeps applying.
+		// Newly announced id: the curated bundled reference seeds limits,
+		// modalities, and the family effort ladder so discovery alone never
+		// surfaces a text-only, null-context row.
 		const flash = models?.find(item => item.id === "glm-5.3-flash");
 		expect(flash?.provider).toBe("zai");
 		expect(flash?.baseUrl).toBe(ZAI_ANTHROPIC_BASE_URL);
 		expect(flash?.name).toBe("GLM-5.3-Flash");
-		expect(flash?.cost).toEqual({ input: 0, output: 0, cacheRead: 0, cacheWrite: 0 });
-		expect(flash?.contextWindow).toBeNull();
+		expect(flash?.reasoning).toBe(true);
+		expect(flash?.input).toEqual(["text", "image"]);
+		expect(flash?.contextWindow).toBe(1_000_000);
+		expect(flash?.maxTokens).toBe(131_072);
+		expect(flash?.thinking).toEqual({
+			mode: "anthropic-budget-effort",
+			efforts: [Effort.Low, Effort.High, Effort.Max],
+			defaultLevel: Effort.Max,
+			requiresEffort: true,
+		});
+		expect(flash?.cost).toEqual({ input: 0.15, output: 0.5, cacheRead: 0.03, cacheWrite: 0 });
+	});
+
+	test("builds discovered glm-5.3-flash with the full Model contract", async () => {
+		// The picker consumes built Models, not mapped specs: prove the merged
+		// reference survives createModelManager's authoritative replace path.
+		const fetchMock: FetchImpl = async () =>
+			anthropicModelsResponse([{ id: "glm-5.3-flash", object: "model", display_name: "GLM-5.3-Flash" }]);
+		const manager = createModelManager(zaiModelManagerOptions({ apiKey: "zai-test-key", fetch: fetchMock }));
+		const { models } = await manager.refresh("online");
+
+		const flash = models.find(model => model.id === "glm-5.3-flash");
+		expect(flash).toBeDefined();
+		expect(flash?.api).toBe("anthropic-messages");
+		expect(flash?.contextWindow).toBe(1_000_000);
+		expect(flash?.maxTokens).toBe(131_072);
+		expect(flash?.input).toEqual(["text", "image"]);
+		expect(flash?.reasoning).toBe(true);
+		expect(flash?.thinking?.mode).toBe("anthropic-budget-effort");
+		expect(flash?.thinking?.efforts).toEqual([Effort.Low, Effort.High, Effort.Max]);
+		expect(flash?.thinking?.defaultLevel).toBe(Effort.Max);
 	});
 
 	test("resolves null on discovery failure so the bundled catalog survives", async () => {
