@@ -121,6 +121,26 @@ describe("Z.AI built-in provider", () => {
 		expect(flash?.cost).toEqual({ input: 0.15, output: 0.5, cacheRead: 0.03, cacheWrite: 0 });
 	});
 
+	test("derives GLM thinking metadata for an unbundled newly launched id", async () => {
+		// A future GLM id (no bundled reference yet) must not surface as
+		// non-reasoning: every GLM SKU is a hybrid reasoning model, so
+		// `transformModel` floors `reasoning` and the build-time policy derives
+		// thinking controls from the identity. The uniform low/high/max ladder
+		// applies to the taxonomy-enumerated 5.3-family ids (asserted above via
+		// the glm-5.3 reference merge); an id the taxonomy has not enumerated
+		// yet derives the provider-default ladder.
+		const fetchMock: FetchImpl = async () =>
+			anthropicModelsResponse([{ id: "glm-5.4", object: "model", display_name: "GLM-5.4" }]);
+		const manager = createModelManager(zaiModelManagerOptions({ apiKey: "zai-test-key", fetch: fetchMock }));
+		const { models } = await manager.refresh("online");
+
+		const glm54 = models.find(model => model.id === "glm-5.4");
+		expect(glm54).toBeDefined();
+		expect(glm54?.reasoning).toBe(true);
+		expect(glm54?.thinking?.mode).toBe("anthropic-budget-effort");
+		expect(glm54?.thinking?.efforts).toEqual([Effort.Minimal, Effort.Low, Effort.Medium, Effort.High, Effort.XHigh]);
+	});
+
 	test("builds discovered glm-5.3-flash with the full Model contract", async () => {
 		// The picker consumes built Models, not mapped specs: prove the merged
 		// reference survives createModelManager's authoritative replace path.
