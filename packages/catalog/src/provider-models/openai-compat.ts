@@ -684,7 +684,7 @@ export function createSimpleOpenAICompletionsOptions(
 	});
 }
 
-function createSimpleAnthropicProviderOptions(
+export function createSimpleAnthropicProviderOptions(
 	providerId: Parameters<typeof getBundledModels>[0],
 	defaultBaseUrlFallback: string,
 	config?: SimpleProviderConfig,

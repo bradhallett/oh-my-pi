@@ -10,6 +10,7 @@ import type { Api, FetchImpl, Model, ModelSpec } from "../types";
 import { DEVIN_DEFAULT_BASE_URL } from "../wire/devin";
 import { toModelSpec } from "./bundled-references";
 import { resolveModelCacheProviderId } from "./cache-provider-id";
+import { createSimpleAnthropicProviderOptions } from "./openai-compat";
 
 // ---------------------------------------------------------------------------
 // OpenAI Codex
@@ -387,11 +388,27 @@ const devinDiscovery = once(() => import("../discovery/devin"));
 // Zai
 // ---------------------------------------------------------------------------
 
-export interface ZaiModelManagerConfig {}
+export interface ZaiModelManagerConfig {
+	apiKey?: string;
+	baseUrl?: string;
+	fetch?: FetchImpl;
+}
 
-/** Creates model-manager options for Z.AI's mixed native and Anthropic transports. */
+/**
+ * Z.AI's Anthropic-compatible proxy serves the same authoritative `/v1/models`
+ * catalog as its PAAS endpoint, so the discovered list is the complete vendor
+ * catalog and prunes static-only ids on a successful fetch. Discovery is gated
+ * on apiKey and merges bundled references, so known GLM ids keep their bundled
+ * pricing, limits, and effort tiers — the zai GLM dialect (thinking format,
+ * reasoning replay) is keyed off the provider host, so it survives discovery
+ * for every id the endpoint returns. The provider keeps Z.AI's mixed native
+ * and Anthropic transports: bundled rows may ride either API surface.
+ */
 export function zaiModelManagerOptions(
-	_config: ZaiModelManagerConfig = {},
+	config: ZaiModelManagerConfig = {},
 ): ModelManagerOptions<"anthropic-messages" | "openai-completions"> {
-	return { providerId: "zai" };
+	return {
+		...createSimpleAnthropicProviderOptions("zai", "https://api.z.ai/api/anthropic", config),
+		dynamicModelsAuthoritative: true,
+	};
 }
