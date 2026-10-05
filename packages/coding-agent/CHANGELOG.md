@@ -6,6 +6,10 @@
 
 - Fixed the `/usage` sheet in Tern missing the Close button the other report sheets have ([#14455](https://github.com/can1357/oh-my-pi/pull/14455) by [@H4vC](https://github.com/H4vC)).
 
+### Added
+
+- Added sibling-output gating to the task tool prompt: when many `agent://` reports land, one `judge_batch()` acceptance check over the results first, and the parent reads only flagged, failed, or low-confidence reports
+
 ## [18.6.2] - 2026-10-04
 
 ### Fixed

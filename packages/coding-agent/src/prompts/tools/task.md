@@ -3,6 +3,8 @@
 
 # Results
 `outputSchema` parsed payload, even invalid: `agent://<id>` (field `/<field>`, nested `/reports/0/data`); invalid preview inline.
+{{#if evalToolsEnabled}}Many sibling outputs to review? Gate before reading them all: one `judge_batch()` (`judgeBatch()` in JS) of bool "does this report meet its acceptance criterion?" over the results; read only the flagged, failed, and low-confidence ones yourself.
+{{/if}}
 {{/if}}
 
 # Delegation
