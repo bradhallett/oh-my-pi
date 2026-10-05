@@ -8,7 +8,7 @@
 
 ### Added
 
-- Added sibling-output gating to the task tool prompt: when many `agent://` reports land, one `judge_batch()` acceptance check over the results first, and the parent reads only flagged, failed, or low-confidence reports ([#14432](https://github.com/can1357/oh-my-pi/pull/14432) by [@bradhallett](https://github.com/bradhallett))
+- Task tool now tells the agent to screen many subagent reports with `judge_batch()` and read only flagged, failed, or low-confidence ones ([#14432](https://github.com/can1357/oh-my-pi/pull/14432) by [@bradhallett](https://github.com/bradhallett))
 
 ## [18.6.2] - 2026-10-04
 
