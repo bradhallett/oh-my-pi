@@ -71,7 +71,8 @@ await tab.close()
 
 <critical>
 - MUST open a tab before direct use; `browser.tab(name)` does not open one.
-- Default to `tab.observe()`; use screenshots for visual confirmation.
+- Default to `tab.observe()`; screenshots answer visual questions (layout, canvas), not state questions.
+- Exact selector/ref → act directly. Ambiguous grounding (several `observe()`/`ariaSnapshot()` candidates for one fuzzy intent) → one `judge()` `choice` over the candidate labels; post-action state checks (heading, toast, value) → `judge()` `bool` on the fresh state; many tabs/states → `judge_batch()`. Read or screenshot yourself only on close probabilities or when text/AX cannot answer.
 - `tab.run` has full Bun/Node and tool-bridge access; it is not sandboxed.
 - Relay and CDP actions operate on real user sessions.
 </critical>

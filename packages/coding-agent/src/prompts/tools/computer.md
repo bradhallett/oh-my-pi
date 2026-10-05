@@ -40,6 +40,7 @@ await win.click(120, 48, button="right")
 
 <rules>
 - PREFER AX over pixels: `win.ax()` → `el.press()`/`el.click()`/`el.setValue()`. Element actions need no screenshot.
+- Perception routing mirrors it: exact `ref` → act directly; ambiguous `ax()`/`find()` candidates for one fuzzy intent → one `judge()` `choice` over their titles/roles; post-action state checks → `judge()` `bool` on fresh AX text; many windows/states → `judge_batch()`. Read or screenshot yourself only on close probabilities or when AX text cannot answer.
 - Pointer `x,y`: pixels in the MOST RECENT screenshot of the SAME target. AX coordinates are global desktop coordinates. NEVER mix them.
 - Each window `.ax()` starts a ref generation. Current/previous snapshot refs remain valid; older refs throw `StaleRef`. Re-snapshot; NEVER guess.
 - Window input defaults to background routes without moving the user's pointer or deliberately activating the target. NEVER pass `takeover` by default. Only after THAT call throws `BackgroundUnavailable` or a screenshot proves a no-op, and AX cannot do it, retry that call with `{ takeover: true }`. A keyboard refusal does not make clicks need takeover. OS acceptance alone does not prove the application acted.

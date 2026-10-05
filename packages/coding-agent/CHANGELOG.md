@@ -5,6 +5,9 @@
 ### Fixed
 
 - Fixed the `/usage` sheet in Tern missing the Close button the other report sheets have ([#14455](https://github.com/can1357/oh-my-pi/pull/14455) by [@H4vC](https://github.com/H4vC)).
+### Added
+
+- Pointed the browser and computer tool prompts at the eval kernel's `judge()`/`judge_batch()` for ambiguous element grounding and post-action state verification, instead of defaulting to screenshot+vision round-trips
 
 ## [18.6.2] - 2026-10-04
 
