@@ -72,7 +72,7 @@ await tab.close()
 <critical>
 - MUST open a tab before direct use; `browser.tab(name)` does not open one.
 - Default to `tab.observe()`; screenshots answer visual questions (layout, canvas), not state questions.
-- Exact selector/ref → act directly. Ambiguous grounding (several `observe()`/`ariaSnapshot()` candidates for one fuzzy intent) → one `judge()` `choice` over the candidate labels; post-action state checks (heading, toast, value) → `judge()` `bool` on the fresh state; many tabs/states → `judge_batch()`. Read or screenshot yourself only on close probabilities or when text/AX cannot answer.
+- Exact selector/ref → act directly; prefer exact reads (`tab.text`, `tab.value`, `waitForText`, `isVisible`) for post-action checks. Fuzzy questions those cannot express — which of several similar candidates matches the intent, does this state read like an error — go to `judge()` (`choice`/`bool` over the observed labels or AX text; `judge_batch()` in Python, `judgeBatch()` in JS). Screenshots stay for visual questions.
 - `tab.run` has full Bun/Node and tool-bridge access; it is not sandboxed.
 - Relay and CDP actions operate on real user sessions.
 </critical>
